@@ -11,11 +11,12 @@ import Categories from './src/payload/collections/Categories';
 import Orders from './src/payload/collections/Orders';
 import Users from './src/payload/collections/Users';
 import Redirects from './src/payload/collections/Redirects';
+import Media from './src/payload/collections/Media';
 import HomepageSections from './src/payload/globals/HomepageSections';
 
 export default buildConfig({
   editor: slateEditor({}),
-  collections: [Products, Categories, Orders, Users, Redirects],
+  collections: [Products, Categories, Orders, Users, Redirects, Media],
   globals: [HomepageSections],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),

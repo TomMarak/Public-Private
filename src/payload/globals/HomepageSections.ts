@@ -94,9 +94,10 @@ const HomepageSections: GlobalConfig = {
           },
         },
         {
-          name: 'imageUrl',
-          type: 'text',
-          label: 'Image URL',
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+          label: 'Image',
           admin: {
             condition: ({ siblingData }) => siblingData?.sectionType !== 'featured_products',
           },

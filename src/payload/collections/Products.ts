@@ -67,15 +67,17 @@ const Products: CollectionConfig = {
       label: 'Images',
       fields: [
         {
-          name: 'url',
-          type: 'text',
-          label: 'Image URL',
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+          label: 'Image',
           required: true,
         },
         {
           name: 'alt',
           type: 'text',
           label: 'Alt text',
+          localized: true,
         },
       ],
     },

@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload';
+import { generateOrderNumber } from '../hooks/beforeChange/generateOrderNumber';
 
 const Orders: CollectionConfig = {
   slug: 'orders',
@@ -11,12 +12,14 @@ const Orders: CollectionConfig = {
     defaultColumns: ['orderNumber', 'status', 'total', 'customer'],
   },
   timestamps: true,
+  hooks: {
+    beforeChange: [generateOrderNumber],
+  },
   fields: [
     {
       name: 'orderNumber',
       type: 'text',
       label: 'Order number',
-      required: true,
       unique: true,
       admin: {
         readOnly: true,
