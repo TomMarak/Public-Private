@@ -70,6 +70,15 @@ export async function POST(request: NextRequest) {
       path: '/',
     });
 
+    // Set access token as httpOnly cookie for middleware
+    response.cookies.set('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60, // 15 minutes
+      path: '/',
+    });
+
     return response;
   } catch (error) {
     console.error('Login error:', error);

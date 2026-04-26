@@ -13,6 +13,14 @@ export async function POST(request: NextRequest) {
       path: '/',
     });
 
+    response.cookies.set('accessToken', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 0,
+      path: '/',
+    });
+
     return response;
   } catch (error) {
     console.error('Logout error:', error);

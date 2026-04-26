@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     const newAccessToken = generateAccessToken(userSession);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       accessToken: newAccessToken,
       user: {
         id: user.id,
@@ -57,6 +57,17 @@ export async function POST(request: NextRequest) {
         role: user.role,
       },
     });
+
+    // Update access token cookie
+    response.cookies.set('accessToken', newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60, // 15 minutes
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     console.error('Refresh error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
