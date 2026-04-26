@@ -1,0 +1,11 @@
+{
+  "common": {
+    "home": "Domů",
+    "about": "O nás",
+    "contact": "Kontakt",
+    "login": "Přihlášení",
+    "logout": "Odhlášení",
+    "cart": "Košík",
+    "checkout": "Objednat"
+  }
+}

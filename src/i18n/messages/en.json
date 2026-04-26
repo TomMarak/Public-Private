@@ -1,0 +1,11 @@
+{
+  "common": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "logout": "Logout",
+    "cart": "Cart",
+    "checkout": "Checkout"
+  }
+}
