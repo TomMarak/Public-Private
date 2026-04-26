@@ -14,4 +14,5 @@ export interface Cart {
   subtotal: number;
   tax: number;
   total: number;
+  itemCount: number;
 }

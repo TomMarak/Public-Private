@@ -11,10 +11,11 @@ export const useCart = () => {
     removeItem,
     updateQuantity,
     clearCart,
-    getTotals,
+    total,
+    itemCount,
+    subtotal,
+    tax,
   } = useCartStore();
-
-  const cartTotal = getTotals();
 
   return {
     items,
@@ -22,6 +23,9 @@ export const useCart = () => {
     removeItem,
     updateQuantity,
     clearCart,
-    ...cartTotal,
+    total,
+    itemCount,
+    subtotal,
+    tax,
   };
 };
