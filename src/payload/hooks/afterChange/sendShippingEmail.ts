@@ -1,7 +1,7 @@
-import { AfterChangeHook } from 'payload/dist/collections/config/types';
+import { CollectionAfterChangeHook } from 'payload';
 import { sendShippingConfirmation } from '../../../lib/email';
 
-export const sendShippingEmail: AfterChangeHook = async ({
+export const sendShippingEmail: CollectionAfterChangeHook = async ({
   doc,
   previousDoc,
   operation,

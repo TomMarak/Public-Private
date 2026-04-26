@@ -17,7 +17,7 @@ export const pool = new Pool(poolConfig);
 
 export const getDatabaseUrl = () => databaseUrl;
 
-export const query = async <T = any>(text: string, params?: unknown[]) => {
+export const query = async <T extends object = any>(text: string, params?: unknown[]) => {
   const result = await pool.query<T>(text, params);
   return result;
 };

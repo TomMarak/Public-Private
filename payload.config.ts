@@ -1,12 +1,16 @@
 import path from 'path';
-import { buildConfig } from '@payloadcms/next/config';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+import { buildConfig } from 'payload';
 import { postgresAdapter } from '@payloadcms/db-postgres';
-import { slateEditor } from '@payloadcms/richtext-slate';
-import { en } from '@payloadcms/ui/languages/en';
-import { cs } from '@payloadcms/ui/languages/cs';
+import { lexicalEditor } from '@payloadcms/richtext-lexical';
+import { en } from '@payloadcms/translations/languages/en';
+import { cs } from '@payloadcms/translations/languages/cs';
 import { s3Storage } from '@payloadcms/storage-s3';
 
-import { getDatabaseUrl } from './src/lib/db';
+
 import Products from './src/payload/collections/Products';
 import Categories from './src/payload/collections/Categories';
 import Orders from './src/payload/collections/Orders';
@@ -16,16 +20,18 @@ import Media from './src/payload/collections/Media';
 import HomepageSections from './src/payload/globals/HomepageSections';
 
 export default buildConfig({
-  editor: slateEditor({}),
+  editor: lexicalEditor({}),
+  secret: process.env.PAYLOAD_SECRET || '',
   collections: [Products, Categories, Orders, Users, Redirects, Media],
   globals: [HomepageSections],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),
   },
   db: postgresAdapter({
-    url: getDatabaseUrl(),
-    idType: 'uuid',
-  }),
+  pool: {
+    connectionString: process.env.DATABASE_URL || '',
+  },
+}),
   i18n: {
     supportedLanguages: {
       en,

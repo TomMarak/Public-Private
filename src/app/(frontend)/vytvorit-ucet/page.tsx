@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { verifyAccountCreationToken } from '@/lib/auth/tokens';
 import { registerSchema } from '@/validators/auth';
@@ -10,7 +10,7 @@ interface FormData {
   confirmPassword: string;
 }
 
-export default function VytvoritUcetPage() {
+function VytvoritUcetContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -81,7 +81,6 @@ export default function VytvoritUcetPage() {
         throw new Error(result.error || 'Registrace selhala');
       }
 
-      // Redirect to login or dashboard
       router.push('/ucet?message=Účet byl úspěšně vytvořen');
 
     } catch (error) {
@@ -192,5 +191,17 @@ export default function VytvoritUcetPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VytvoritUcetPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <VytvoritUcetContent />
+    </Suspense>
   );
 }

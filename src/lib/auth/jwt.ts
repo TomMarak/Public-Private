@@ -16,6 +16,6 @@ export const verifyAccessToken = (token: string): UserSession => {
   return jwt.verify(token, JWT_SECRET) as UserSession;
 };
 
-export const verifyRefreshToken = (token: string): { userId: string } => {
-  return jwt.verify(token, JWT_REFRESH_SECRET) as { userId: string };
+export const verifyRefreshToken = (token: string): { userId: string; type?: string; orderId?: string; email?: string } => {
+  return jwt.verify(token, JWT_REFRESH_SECRET) as { userId: string; type?: string; orderId?: string; email?: string };
 };

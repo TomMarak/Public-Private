@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import CheckoutForm from '@/components/checkout/CheckoutForm';
-import ShippingSelector from '@/components/checkout/ShippingSelector';
-import PaymentSelector from '@/components/checkout/PaymentSelector';
-import OrderSummary from '@/components/checkout/OrderSummary';
+import { CheckoutForm } from '@/components/checkout/CheckoutForm';
+import { ShippingSelector } from '@/components/checkout/ShippingSelector';
+import { PaymentSelector } from '@/components/checkout/PaymentSelector';
+import { OrderSummary } from '@/components/checkout/OrderSummary';
 import { useCart } from '@/hooks/useCart';
 
 interface CheckoutFormData {

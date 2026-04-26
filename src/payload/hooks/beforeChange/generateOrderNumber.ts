@@ -1,6 +1,6 @@
-import { BeforeChangeHook } from 'payload/dist/collections/config/types';
+import { CollectionBeforeChangeHook } from 'payload';
 
-export const generateOrderNumber: BeforeChangeHook = async ({
+export const generateOrderNumber: CollectionBeforeChangeHook = async ({
   data,
   operation,
 }) => {

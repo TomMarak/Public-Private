@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPayload } from '@payloadcms/next';
+import { getPayload } from 'payload';
+import config from '@payload-config';
 import { verifyGoPayWebhook } from '@/lib/gopay';
-import config from '../../../../payload.config';
+
+type OrderStatus = 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const signature = request.headers.get('x-hub-signature');
 
-    // Verify webhook signature (if provided)
     if (signature) {
       const isValid = await verifyGoPayWebhook(signature, body);
       if (!isValid) {
@@ -18,10 +19,8 @@ export async function POST(request: NextRequest) {
 
     const payload = await getPayload({ config });
 
-    // GoPay webhook body contains payment information
-    const { id: paymentId, state, order_number: orderNumber } = body;
+    const { id: paymentId, state } = body;
 
-    // Find order by payment ID
     const orders = await payload.find({
       collection: 'orders',
       where: {
@@ -38,8 +37,11 @@ export async function POST(request: NextRequest) {
 
     const order = orders.docs[0];
 
-    // Update order status based on GoPay payment state
-    let newStatus: string;
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    let newStatus: OrderStatus;
     switch (state) {
       case 'PAID':
         newStatus = 'paid';
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
         break;
       default:
         console.log(`Unhandled GoPay state: ${state}`);
-        newStatus = order.status; // Keep current status
+        newStatus = (order.status as OrderStatus | null | undefined) ?? 'pending';
     }
 
     if (newStatus !== order.status) {

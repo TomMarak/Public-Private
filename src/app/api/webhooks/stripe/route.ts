@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPayload } from '@payloadcms/next';
+import { getPayload } from 'payload';
+import config from '@payload-config';
+import Stripe from 'stripe';
 import { verifyStripeSignature, getStripeClient } from '@/lib/stripe';
-import config from '../../../../payload.config';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,8 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
     }
 
-    // Verify webhook signature
-    let event;
+    let event: Stripe.Event;
     try {
       event = verifyStripeSignature(body, signature);
     } catch (error) {
@@ -23,14 +23,12 @@ export async function POST(request: NextRequest) {
 
     const payload = await getPayload({ config });
 
-    // Handle the event
     switch (event.type) {
-      case 'payment_intent.succeeded':
-        const paymentIntent = event.data.object;
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
         const orderId = paymentIntent.metadata.orderId;
 
         if (orderId) {
-          // Update order status to paid
           await payload.update({
             collection: 'orders',
             id: orderId,
@@ -42,13 +40,13 @@ export async function POST(request: NextRequest) {
           console.log(`Order ${orderId} marked as paid`);
         }
         break;
+      }
 
-      case 'payment_intent.payment_failed':
-        const failedPaymentIntent = event.data.object;
+      case 'payment_intent.payment_failed': {
+        const failedPaymentIntent = event.data.object as Stripe.PaymentIntent;
         const failedOrderId = failedPaymentIntent.metadata.orderId;
 
         if (failedOrderId) {
-          // Update order status to cancelled
           await payload.update({
             collection: 'orders',
             id: failedOrderId,
@@ -60,6 +58,7 @@ export async function POST(request: NextRequest) {
           console.log(`Order ${failedOrderId} marked as cancelled due to payment failure`);
         }
         break;
+      }
 
       default:
         console.log(`Unhandled event type ${event.type}`);

@@ -1,8 +1,8 @@
 import type { NextConfig } from 'next';
-import { buildConfig } from '@payloadcms/next/config';
+import { withPayload } from '@payloadcms/next/withPayload';
 
-const config: NextConfig = buildConfig({
-  plugins: [],
-});
+const config: NextConfig = {
+  // Your Next.js config here
+};
 
-export default config;
+export default withPayload(config);

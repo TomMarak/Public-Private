@@ -6,6 +6,7 @@ const Users: CollectionConfig = {
     singular: 'User',
     plural: 'Users',
   },
+  auth: true,
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['email', 'name', 'role'],
@@ -18,15 +19,6 @@ const Users: CollectionConfig = {
       label: 'Email',
       required: true,
       unique: true,
-    },
-    {
-      name: 'password',
-      type: 'password',
-      label: 'Password',
-      required: true,
-      admin: {
-        position: 'sidebar',
-      },
     },
     {
       name: 'name',

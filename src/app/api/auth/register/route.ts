@@ -1,8 +1,8 @@
+import config from '@payload-config'
 import { NextRequest, NextResponse } from 'next/server';
-import { getPayload } from '@payloadcms/next';
+import { getPayload } from 'payload';
 import { registerSchema } from '@/validators/auth';
 import { hashPassword } from '@/lib/auth/password';
-import config from '../../../payload.config';
 
 export async function POST(request: NextRequest) {
   try {

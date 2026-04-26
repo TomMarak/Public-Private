@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPayload } from '@payloadcms/next';
+import { getPayload } from 'payload';
+import config from '@payload-config';
 import { checkoutSchema } from '@/validators/checkout';
 import { getStripeClient } from '@/lib/stripe';
 import { createGoPayPayment } from '@/lib/gopay';
 import { sendOrderConfirmation, sendAccountCreationOffer, sendNewOrderNotification } from '@/lib/email';
-import config from '../../../payload.config';
 
 const shippingPrices = {
   zasilkovna: 49,
@@ -164,8 +164,10 @@ export async function POST(request: NextRequest) {
     }, {} as Record<string, string>);
 
     const itemsWithNames = data.items.map(item => ({
-      ...item,
       productName: productMap[item.productId] || 'Neznámý produkt',
+      variantName: item.variant?.name,
+      quantity: item.quantity,
+      priceAtPurchase: item.priceAtAdd,
     }));
 
     // Send emails asynchronously (don't block response)
@@ -184,8 +186,6 @@ export async function POST(request: NextRequest) {
         paymentMethod: data.paymentMethod,
         shippingAddress: {
           name: `${data.firstName} ${data.lastName}`,
-          email: data.email,
-          phone: data.phone,
           street: data.street,
           city: data.city,
           postalCode: data.postalCode,
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
       // 2. Account creation offer for guest (only for paid orders)
       if (data.paymentMethod !== 'cash_on_delivery') {
         await sendAccountCreationOffer({
-          orderId: order.id,
+          orderId: order.id.toString(),
           customerEmail: data.email,
           customerName: `${data.firstName} ${data.lastName}`,
           orderNumber: order.orderNumber,
