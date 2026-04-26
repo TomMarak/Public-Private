@@ -1,36 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
+import { jwtVerify } from 'jose/jwt/verify';
 import { routing } from './i18n/routing';
-import { verifyAccessToken } from './lib/auth/jwt';
-import { query } from './lib/db';
 
 const intlMiddleware = createMiddleware(routing);
 
-async function checkRedirect(pathname: string): Promise<{ to: string; type: number } | null> {
-  try {
-    const cleanPath = pathname.replace(/^\/(cs|en)/, '') || '/';
+// TextEncoder is available in Edge runtime; pre-compute the key once
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'development_secret'
+);
 
-    const redirectResult = await query(
-      'SELECT "to", type FROM redirects WHERE "from" = $1 AND "isActive" = true',
-      [cleanPath]
-    );
+// Redirect checking against the DB cannot run in Edge runtime (pg requires
+// Node.js net/crypto).  Dynamic redirects from the Redirects collection are
+// handled by the catch-all page at the route level instead.
 
-    if (redirectResult.rows.length === 0) {
-      return null;
-    }
-
-    const redirect = redirectResult.rows[0];
-    return {
-      to: redirect.to,
-      type: parseInt(redirect.type),
-    };
-  } catch (error) {
-    console.error('Redirect check failed:', error);
-    return null;
-  }
-}
-
-function checkAuth(request: NextRequest): NextResponse | null {
+async function checkAuth(request: NextRequest): Promise<NextResponse | null> {
   const pathname = request.nextUrl.pathname;
   const pathWithoutLocale = pathname.replace(/^\/(cs|en)/, '') || '/';
 
@@ -43,9 +27,9 @@ function checkAuth(request: NextRequest): NextResponse | null {
     }
 
     try {
-      verifyAccessToken(accessToken);
+      await jwtVerify(accessToken, JWT_SECRET);
       return null;
-    } catch (error) {
+    } catch {
       const loginUrl = new URL('/prihlaseni', request.url);
       return NextResponse.redirect(loginUrl);
     }
@@ -66,13 +50,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const redirect = await checkRedirect(pathname);
-  if (redirect) {
-    const redirectUrl = new URL(redirect.to, request.url);
-    return NextResponse.redirect(redirectUrl, { status: redirect.type });
-  }
-
-  const authResponse = checkAuth(request);
+  const authResponse = await checkAuth(request);
   if (authResponse) {
     return authResponse;
   }

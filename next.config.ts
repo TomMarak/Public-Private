@@ -1,8 +1,9 @@
-import type { NextConfig } from 'next';
-import { withPayload } from '@payloadcms/next/withPayload';
+import type { NextConfig } from 'next'
+import { withPayload } from '@payloadcms/next/withPayload'
+import createNextIntlPlugin from 'next-intl/plugin'
 
-const config: NextConfig = {
-  // Your Next.js config here
-};
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
-export default withPayload(config);
+const config: NextConfig = {}
+
+export default withPayload(withNextIntl(config))

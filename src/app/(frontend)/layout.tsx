@@ -1,11 +1,12 @@
-import type { Metadata } from 'next';
+import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
 
 export const metadata: Metadata = {
   title: 'Battle Owl - Česká značka péče o vousy',
   description: 'Prémiová kosmetika pro muže. Péče o vousy, vlasy a kůži.',
-};
+}
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="cs">
       <body>{children}</body>
