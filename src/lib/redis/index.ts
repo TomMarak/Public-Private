@@ -1,20 +1,32 @@
-import { createClient } from 'redis';
+import dotenv from 'dotenv';
+import { createClient, type RedisClientType } from 'redis';
 
-let redis: ReturnType<typeof createClient> | null = null;
+dotenv.config();
+
+const redisUrl = process.env.REDIS_URL;
+
+if (!redisUrl) {
+  throw new Error('REDIS_URL is not defined in the environment');
+}
+
+let redisClient: RedisClientType | null = null;
 
 export const getRedisClient = async () => {
-  if (!redis) {
-    redis = createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6379',
+  if (!redisClient) {
+    redisClient = createClient({
+      url: redisUrl,
     });
-    await redis.connect();
+    redisClient.on('error', (error) => {
+      console.error('Redis client error:', error);
+    });
+    await redisClient.connect();
   }
-  return redis;
+  return redisClient;
 };
 
 export const closeRedis = async () => {
-  if (redis) {
-    await redis.quit();
-    redis = null;
+  if (redisClient) {
+    await redisClient.quit();
+    redisClient = null;
   }
 };
