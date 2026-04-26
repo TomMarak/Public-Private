@@ -4,6 +4,7 @@ import { postgresAdapter } from '@payloadcms/db-postgres';
 import { slateEditor } from '@payloadcms/richtext-slate';
 import { en } from '@payloadcms/ui/languages/en';
 import { cs } from '@payloadcms/ui/languages/cs';
+import { s3Storage } from '@payloadcms/storage-s3';
 
 import { getDatabaseUrl } from './src/lib/db';
 import Products from './src/payload/collections/Products';
@@ -31,4 +32,22 @@ export default buildConfig({
       cs,
     },
   },
+  plugins: [
+    s3Storage({
+      collections: {
+        media: {
+          prefix: 'media',
+        },
+      },
+      bucket: process.env.R2_BUCKET_NAME || '',
+      config: {
+        region: 'auto',
+        endpoint: process.env.R2_ENDPOINT,
+        credentials: {
+          accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+        },
+      },
+    }),
+  ],
 });

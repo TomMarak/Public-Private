@@ -7,7 +7,8 @@ const Media: CollectionConfig = {
     plural: 'Media',
   },
   upload: {
-    staticDir: 'public/media',
+    // Disable static directory since we're using S3/R2
+    disableLocalStorage: true,
     imageSizes: [
       {
         name: 'thumbnail',
