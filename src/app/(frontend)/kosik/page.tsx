@@ -35,47 +35,52 @@ export default function KosikPage() {
     setIsSubmitting(true);
 
     try {
-      // Here you would integrate with your payment processor (Stripe, GoPay)
-      // For now, we'll simulate the order creation
-
-      const orderData = {
-        customer: null, // For guest checkout
-        guestEmail: formData.email,
-        items: items.map(item => ({
-          product: item.productId,
-          variantName: item.variant?.name,
-          quantity: item.quantity,
-          priceAtPurchase: item.priceAtAdd,
-        })),
-        shippingAddress: {
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          phone: formData.phone,
-          street: formData.street,
-          city: formData.city,
-          postalCode: formData.postalCode,
-          country: formData.country,
-        },
+      const checkoutData = {
+        ...formData,
         shippingMethod,
         paymentMethod,
-        subtotal: total,
-        tax: total * 0.21,
-        shipping: getShippingPrice(shippingMethod),
-        total: total + (total * 0.21) + getShippingPrice(shippingMethod),
+        items: items.map(item => ({
+          productId: item.productId,
+          variant: item.variant,
+          quantity: item.quantity,
+          priceAtAdd: item.priceAtAdd,
+        })),
       };
 
-      // TODO: Send order to API
-      console.log('Order data:', orderData);
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(checkoutData),
+      });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Checkout failed');
+      }
+
+      // Handle payment redirect based on method
+      if (result.payment.type === 'stripe') {
+        // Redirect to Stripe checkout or handle client-side
+        // For now, just show success
+        alert(`Objednávka ${result.order.orderNumber} vytvořena. Stripe PaymentIntent: ${result.payment.paymentIntentId}`);
+      } else if (result.payment.type === 'gopay') {
+        // Redirect to GoPay
+        window.location.href = result.payment.gwUrl;
+        return; // Don't clear cart or redirect yet
+      } else if (result.payment.type === 'cash_on_delivery') {
+        // For cash on delivery, order is pending
+        alert(`Objednávka ${result.order.orderNumber} vytvořena. Platba při doručení.`);
+      }
 
       // Clear cart and redirect to success page
       clearCart();
       router.push('/objednavka-potvrzena');
 
     } catch (error) {
-      console.error('Order submission failed:', error);
+      console.error('Checkout submission failed:', error);
       alert('Došlo k chybě při zpracování objednávky. Zkuste to prosím znovu.');
     } finally {
       setIsSubmitting(false);
