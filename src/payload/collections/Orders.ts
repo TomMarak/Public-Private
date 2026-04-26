@@ -1,5 +1,6 @@
 import { CollectionConfig } from 'payload';
 import { generateOrderNumber } from '../hooks/beforeChange/generateOrderNumber';
+import { sendShippingEmail } from '../hooks/afterChange/sendShippingEmail';
 
 const Orders: CollectionConfig = {
   slug: 'orders',
@@ -14,6 +15,7 @@ const Orders: CollectionConfig = {
   timestamps: true,
   hooks: {
     beforeChange: [generateOrderNumber],
+    afterChange: [sendShippingEmail],
   },
   fields: [
     {
@@ -146,6 +148,14 @@ const Orders: CollectionConfig = {
       label: 'Shipping cost',
       required: true,
       min: 0,
+    },
+    {
+      name: 'trackingNumber',
+      type: 'text',
+      label: 'Tracking number',
+      admin: {
+        description: 'Sledovací číslo zásilky (volitelné)',
+      },
     },
     {
       name: 'total',

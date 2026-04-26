@@ -3,6 +3,7 @@ import { getPayload } from '@payloadcms/next';
 import { checkoutSchema } from '@/validators/checkout';
 import { getStripeClient } from '@/lib/stripe';
 import { createGoPayPayment } from '@/lib/gopay';
+import { sendOrderConfirmation, sendAccountCreationOffer, sendNewOrderNotification } from '@/lib/email';
 import config from '../../../payload.config';
 
 const shippingPrices = {
@@ -144,6 +145,78 @@ export async function POST(request: NextRequest) {
         type: 'cash_on_delivery',
         status: 'pending',
       };
+    }
+
+    // Get product names for emails
+    const productIds = data.items.map(item => item.productId);
+    const products = await payload.find({
+      collection: 'products',
+      where: {
+        id: {
+          in: productIds,
+        },
+      },
+    });
+
+    const productMap = products.docs.reduce((map, product) => {
+      map[product.id] = product.name;
+      return map;
+    }, {} as Record<string, string>);
+
+    const itemsWithNames = data.items.map(item => ({
+      ...item,
+      productName: productMap[item.productId] || 'Neznámý produkt',
+    }));
+
+    // Send emails asynchronously (don't block response)
+    try {
+      // 1. Order confirmation to customer
+      await sendOrderConfirmation({
+        orderNumber: order.orderNumber,
+        customerEmail: data.email,
+        customerName: `${data.firstName} ${data.lastName}`,
+        items: itemsWithNames,
+        subtotal,
+        tax,
+        shipping,
+        total,
+        shippingMethod: data.shippingMethod,
+        paymentMethod: data.paymentMethod,
+        shippingAddress: {
+          name: `${data.firstName} ${data.lastName}`,
+          email: data.email,
+          phone: data.phone,
+          street: data.street,
+          city: data.city,
+          postalCode: data.postalCode,
+          country: data.country,
+        },
+      });
+
+      // 2. Account creation offer for guest (only for paid orders)
+      if (data.paymentMethod !== 'cash_on_delivery') {
+        await sendAccountCreationOffer({
+          orderId: order.id,
+          customerEmail: data.email,
+          customerName: `${data.firstName} ${data.lastName}`,
+          orderNumber: order.orderNumber,
+        });
+      }
+
+      // 3. New order notification to admin
+      await sendNewOrderNotification({
+        orderNumber: order.orderNumber,
+        customerEmail: data.email,
+        customerName: `${data.firstName} ${data.lastName}`,
+        total,
+        paymentMethod: data.paymentMethod,
+        shippingMethod: data.shippingMethod,
+        items: itemsWithNames,
+      });
+
+    } catch (emailError) {
+      // Log email error but don't fail the checkout
+      console.error('Failed to send emails:', emailError);
     }
 
     return NextResponse.json({

@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getPayload } from '@payloadcms/next';
 import { registerSchema } from '@/validators/auth';
 import { hashPassword } from '@/lib/auth/password';
-import { query } from '@/lib/db';
-import { v4 as uuidv4 } from 'uuid';
+import config from '../../../payload.config';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const validation = registerSchema.safeParse(body);
+    const { orderId, ...registerData } = body;
+
+    const validation = registerSchema.safeParse(registerData);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -18,13 +20,19 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = validation.data;
 
-    // Check if user already exists
-    const existingUser = await query(
-      'SELECT id FROM users WHERE email = $1',
-      [email]
-    );
+    const payload = await getPayload({ config });
 
-    if (existingUser.rows.length > 0) {
+    // Check if user already exists
+    const existingUsers = await payload.find({
+      collection: 'users',
+      where: {
+        email: {
+          equals: email,
+        },
+      },
+    });
+
+    if (existingUsers.docs.length > 0) {
       return NextResponse.json(
         { error: 'User with this email already exists' },
         { status: 409 }
@@ -35,19 +43,45 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hashPassword(password);
 
     // Create user
-    const userId = uuidv4();
-    const now = new Date();
+    const user = await payload.create({
+      collection: 'users',
+      data: {
+        email,
+        password: hashedPassword,
+        name: email.split('@')[0],
+        role: 'customer',
+      },
+    });
 
-    await query(
-      `INSERT INTO users (id, email, password, name, role, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [userId, email, hashedPassword, email.split('@')[0], 'customer', now, now]
-    );
+    // If orderId is provided, assign existing guest orders to this user
+    if (orderId) {
+      const orders = await payload.find({
+        collection: 'orders',
+        where: {
+          guestEmail: {
+            equals: email,
+          },
+        },
+      });
+
+      // Update orders to link to the new user
+      for (const order of orders.docs) {
+        await payload.update({
+          collection: 'orders',
+          id: order.id,
+          data: {
+            customer: user.id,
+            guestEmail: null, // Remove guest email since user now exists
+          },
+        });
+      }
+    }
 
     return NextResponse.json(
       { message: 'User registered successfully' },
       { status: 201 }
     );
+
   } catch (error) {
     console.error('Register error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

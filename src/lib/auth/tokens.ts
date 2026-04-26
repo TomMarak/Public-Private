@@ -22,3 +22,35 @@ export const refreshAccessToken = (refreshToken: string) => {
     };
   }
 };
+
+// Create account creation token for guest users (24h expiry)
+export const createAccountCreationToken = async (orderId: string, email: string): Promise<string> => {
+  const payload = {
+    type: 'account_creation',
+    orderId,
+    email,
+    exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
+  };
+
+  return generateAccessToken(payload as any);
+};
+
+// Verify account creation token
+export const verifyAccountCreationToken = (token: string) => {
+  try {
+    const payload = verifyRefreshToken(token); // Using refresh token verification for longer expiry
+    if (payload.type !== 'account_creation') {
+      throw new Error('Invalid token type');
+    }
+    return {
+      success: true,
+      orderId: payload.orderId,
+      email: payload.email,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Invalid or expired account creation token',
+    };
+  }
+};
