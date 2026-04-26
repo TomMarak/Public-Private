@@ -14,6 +14,12 @@ export interface UserSession {
   userId: string;
   email: string;
   role: 'admin' | 'customer';
-  iat: number;
-  exp: number;
+  iat?: number;
+  exp?: number;
+}
+
+export interface UserSessionPayload {
+  userId: string;
+  email: string;
+  role: 'admin' | 'customer';
 }

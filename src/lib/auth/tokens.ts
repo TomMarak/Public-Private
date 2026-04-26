@@ -1,7 +1,7 @@
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from './jwt';
-import { UserSession } from '@/types/user';
+import { UserSessionPayload } from '@/types/user';
 
-export const createTokenPair = (user: UserSession) => {
+export const createTokenPair = (user: UserSessionPayload) => {
   return {
     accessToken: generateAccessToken(user),
     refreshToken: generateRefreshToken(user.userId),

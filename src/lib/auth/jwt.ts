@@ -1,10 +1,10 @@
-import jwt from 'jsonwebtoken';
-import { UserSession } from '@/types/user';
+import * as jwt from 'jsonwebtoken';
+import { UserSession, UserSessionPayload } from '@/types/user';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'development_secret';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'development_refresh_secret';
 
-export const generateAccessToken = (user: UserSession): string => {
+export const generateAccessToken = (user: UserSessionPayload): string => {
   return jwt.sign(user, JWT_SECRET, { expiresIn: '15m' });
 };
 
